@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.microsoft.simulator" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>IoT Simulator</name>
+    <description>
+    	A mobile application providing simulation data.
+    </description>
+    <author email="ivan.judson@microsoft.com" href="http://irjudson.org">
+    	Ivan R. Judson - Microsoft
+    </author>
+    <preference name="StatusBarStyle" value="lightcontent" />
+    <content src="index.html" />
+    <access origin="*" />
+</widget>
