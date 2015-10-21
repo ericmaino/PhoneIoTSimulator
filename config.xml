@@ -8,6 +8,7 @@
     	Ivan R. Judson - Microsoft
     </author>
     <preference name="StatusBarStyle" value="lightcontent" />
+    <preference name="BackupWebStorage" value="local"/>
     <content src="index.html" />
     <access origin="*" />
 </widget>
