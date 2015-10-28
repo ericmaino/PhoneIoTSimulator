@@ -34,11 +34,7 @@ var ENV = (function() {
             eventHubSASKeyName: localStorage.getItem('eventHubSASKeyName') || 'EVENTHUB_KEY_NAME',
             eventHubTimeout: localStorage.getItem('eventHubTimeout') || 10,
             beacons: [
-                // BLE Sensorberg Beacons
-                // {uuid:'73676723-7400-0000-ffff-0000ffff0006'},
-            ],
-            // TODO: Move to Bing Maps
-            GOOGLE_MAPS_API_KEY: 'GOOGLE_MAP_API_KEY',
+            ]
         },
         toggle: function(key) {
             var value       = localStorage.getItem(key)
@@ -52,17 +48,21 @@ var ENV = (function() {
 
 var app = {
    /**
-    * @property {google.maps.Map} map
+    * @property {leafletjs} map
     */
     map: undefined,
    /**
-    * @property {google.maps.Marker} location The current location
+    * @property {leafletjs Circle} location The current location
     */
     location: undefined,
    /**
-    * @property {google.map.PolyLine} path The list of background geolocations
+    * @property {Leafletjs PolyLine} path The list of background geolocations
     */
-    path: undefined,
+    path: L.polyline([], 2, {}),
+    /**
+     * @property {leafletjs layer group} layergroup to keep track of markers and lines.
+     */
+    mapLayers: undefined,
    /**
     * @property {Boolean} aggressiveEnabled
     */
@@ -71,15 +71,15 @@ var app = {
     * @property {Array} locations List of rendered map markers of prev locations
     */    
     locations: [],
-    /**
+   /**
      * @property {EventHubClient} a client to the eventhub to send data to.
      */
-     eventHubClient: undefined,
-     /**
+    eventHubClient: undefined,
+   /**
       * @property {beacons} a list of beacons we've seen recently.
       */
      beacons: {},
-     /**
+   /**
       * @property {scanInterval} how often to scan for beacons
       */
      scanInterval: 5000,
@@ -94,7 +94,7 @@ var app = {
      /**
       * @property {lastServiceScanEvent} when was the last service scan done
       */
-      lastServiceScanEvent: new Date(),
+     lastServiceScanEvent: new Date(),
       
     /**
     * @private
@@ -103,18 +103,14 @@ var app = {
     btnPace: undefined,
     btnHome: undefined,
     btnReset: undefined,
-
+    configDisplayed: false,
+    
     // Application Constructor  
     initialize: function() {
         this.bindEvents();
+        this.renderMapView();
     },
-    initializeMap: function() {
-        var mapOptions = {
-          center: { lat: -34.397, lng: 150.644},
-          zoom: 8,
-          zoomControl: false
-        };
-
+    renderMapView: function() {
         var header = $('#header'),
             footer = $('#footer'),
             canvas = $('#map-canvas'),
@@ -123,7 +119,31 @@ var app = {
         canvas.height(canvasHeight);
         canvas.width(window.clientWidth);
 
-        app.map = new google.maps.Map(canvas[0], mapOptions);
+        app.map =  L.map('map-canvas').setView([51.505, -0.09], 13);
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map Data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> | Imagery &copy; <a href="http://mapbox.com">Mapbox</a>',
+            maxZoom: 18,
+            id: 'irjudson.cig198uj20ph0u6m44n3ltn4z',
+            accessToken: 'pk.eyJ1IjoiaXJqdWRzb24iLCJhIjoiY2lnMTk4dzFuMHBhbnV3bHZsMmE0Ym1hcCJ9.LQSOcDk_TOrObpLYB-7_xw'
+        }).addTo(app.map);
+        app.mapLayers = new L.LayerGroup().addTo(app.map);
+    },
+    renderConfigView: function () {
+        var header = $('#header'),
+            footer = $('#footer'),
+            canvas = $('#map-canvas'),
+            config = $('#config'),
+            configHeight = window.innerHeight - header[0].clientHeight - footer[0].clientHeight;;
+        
+        if (app.configDisplayed) {
+            config.hide();
+            canvas.show();
+            app.configDisplayed = false;
+        } else {
+            canvas.hide();
+            config.show();
+            app.configDisplayed = true;
+        }
     },
     // Bind Event Listeners
     //
@@ -140,7 +160,8 @@ var app = {
         this.btnPace        = $('button#btn-pace');
         this.btnEnabled     = $('button#btn-enabled');
     	this.btnBeacons     = $('button#btn-beacons');
-        
+    	this.btnConfig      = $('button#btn-config');   
+             
         if (ENV.settings.aggressive == 'true') {
             this.btnPace.addClass('btn-danger');
         } else {
@@ -158,7 +179,8 @@ var app = {
         this.btnReset.on('click', this.onClickReset);
         this.btnPace.on('click', this.onClickChangePace);
         this.btnEnabled.on('click', this.onClickToggleEnabled);
-        this.btnEabled.on('click', this.onClickBeacons);
+        this.btnBeacons.on('click', this.onClickBeacons);
+        this.btnConfig.on('click', this.renderConfigView);
     },
     // deviceready Event Handler
     //
@@ -167,11 +189,11 @@ var app = {
     onDeviceReady: function() {
         app.receivedEvent('deviceready');
         app.connectToEventHub();
-        app.loadMapsApi();
         app.configureBackgroundGeoLocation();
         app.watchPosition();
         app.startBLEScan();
         app.runScanTimer();
+        app.map.locate({setView: true, maxZoom: 16});
     },
     connectToEventHub: function() {
         console.log("Connecting event hub client.");
@@ -222,17 +244,8 @@ var app = {
         // Only ios emits this stationary event
         bgGeo.onStationary(function(location) {
             if (!app.stationaryRadius) {
-                app.stationaryRadius = new google.maps.Circle({
-                    fillColor: '#cc0000',
-                    fillOpacity: 0.4,
-                    strokeOpacity: 0,
-                    map: app.map
-                });
+                console.log('iOS emitted a stationary event, we discarded it.');
             }
-            var radius = (location.accuracy < location.radius) ? location.radius : location.accuracy;
-            var center = new google.maps.LatLng(location.latitude, location.longitude);
-            app.stationaryRadius.setRadius(radius);
-            app.stationaryRadius.setCenter(center);
         });
 
         // BackgroundGeoLocation is highly configurable.
@@ -390,13 +403,12 @@ var app = {
             fgGeo.getCurrentPosition(function(location) {
                 var map     = app.map,
                     coords  = location.coords,
-                    ll      = new google.maps.LatLng(coords.latitude, coords.longitude),
                     zoom    = map.getZoom();
     
-                map.setCenter(ll);
                 if (zoom < 15) {
                     map.setZoom(15);
                 }
+                map.panTo([location.latitude, location.longitude]);
                 app.setCurrentLocation(coords);
             });            
         }
@@ -419,15 +431,11 @@ var app = {
     },
     onClickReset: function() {
         // Clear prev location markers.
-        var locations = app.locations;
-        for (var n=0,len=locations.length;n<len;n++) {
-            locations[n].setMap(null);
-        }
+        app.path = L.polyline([], 2, {});        
+        app.mapLayers.clearLayers();
+        app.location = undefined;
+        app.previousLocation = undefined;
         app.locations = [];
-
-        // Clear Polyline.
-        app.path.setMap(null);
-        app.path = undefined;
     },
     onClickToggleEnabled: function(value) {
         var bgGeo       = window.plugins.backgroundGeoLocation,
@@ -469,16 +477,8 @@ var app = {
             app.watchId = undefined;
         }
     },
-    loadMapsApi: function () {
-        if (navigator.connection.type === Connection.NONE || (typeof(google) !== "undefined" && typeof(google.maps) !== "undefined")) {
-            return;
-        }
-
-        //TODO: Add your own Google maps API key to the URL below.
-        $.getScript('https://maps.googleapis.com/maps/api/js?key='+ENV.settings.GOOGLE_MAPS_API_KEY+'&sensor=true&callback=app.initializeMap');
-    },
     onOnline: function () {
-        app.loadMapsApi();
+        app.map.locate({setView: true, maxZoom: 16});
     },
 
     /**
@@ -495,7 +495,7 @@ var app = {
     */
     onResume: function() {
         console.log('- onResume');
-        app.loadMapsApi();
+        app.map.locate({setView: true, maxZoom: 16});
         app.watchPosition();
     },
     // Update DOM on a Received Event
@@ -503,72 +503,66 @@ var app = {
         console.log('Received Event: ' + id);
     },
     setCurrentLocation: function(location) {
+        console.log('Called setCurrentLocation');
+        var latlng = [location.latitude, location.longitude];
         if (!app.location) {
-            app.location = new google.maps.Marker({
-                map: app.map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 3,
-                    fillColor: 'blue',
-                    strokeColor: 'blue',
-                    strokeWeight: 5
-                }
+            app.location = L.circle(latlng, 5, {
+                color: 'red',
+                stroke: false,
+                fillOpacity: 1.0
             });
-            app.locationAccuracy = new google.maps.Circle({
-                fillColor: '#3366cc',
-                fillOpacity: 0.4,
-                strokeOpacity: 0,
-                map: app.map
+            app.mapLayers.addLayer(app.location);
+            
+            app.locationAccuracy = L.circle(latlng, 10, {
+                color: 'green',
+                fill: false
             });
+            app.mapLayers.addLayer(app.locationAccuracy);
         }
-        if (!app.path) {
-            app.path = new google.maps.Polyline({
-                map: app.map,
-                strokeColor: '#3366cc',
-                fillOpacity: 0.4
-            });
-        }
-        var latlng = new google.maps.LatLng(location.latitude, location.longitude);
         
+        if (!app.path) {
+            app.path = L.polyline([latlng], 2, {});
+        } else {
+            // Add breadcrumb to current Polyline path.
+            app.path.addLatLng(latlng);
+        }
+        app.mapLayers.addLayer(app.path);
+
         if (app.previousLocation) {
             var prevLocation = app.previousLocation;
             // Drop a breadcrumb of where we've been.
-            app.locations.push(new google.maps.Marker({
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 3,
-                    fillColor: 'green',
-                    strokeColor: 'green',
-                    strokeWeight: 5
-                },
-                map: app.map,
-                position: new google.maps.LatLng(prevLocation.latitude, prevLocation.longitude)
-            }));
+            var nextLocation = L.circle([prevLocation.latitude, prevLocation.longitude], 3, {
+                color: 'red',
+                fillOpacity: 0.5,
+                fill: true,
+                stroke: false
+            });
+            app.mapLayers.addLayer(nextLocation);
         }
 
         // Update our current position marker and accuracy bubble.
-        app.location.setPosition(latlng);
-        app.locationAccuracy.setCenter(latlng);
+        // If we're near an edge of the screen, we should probably zoom out (panning is visually disruptive)
+        app.map.panTo(latlng);
+        app.location.setLatLng(latlng);
+        app.locationAccuracy.setLatLng(latlng);
         app.locationAccuracy.setRadius(location.accuracy);
-
-        // Add breadcrumb to current Polyline path.
-        app.path.getPath().push(latlng);
         app.previousLocation = location;
         
         // Send to eventhub
         console.log("Sending location: "+location+" to eventhub.");
-        var eventBody = { 
-                            Latitude: location.latitude,
-                            Longitude: location.longitude,
-                            Timestamp: new Date(),
-                            UserID: device.uuid
-                        }; 
+        
+        // var eventBody = { 
+        //                     Latitude: location.latitude,
+        //                     Longitude: location.longitude,
+        //                     Timestamp: new Date(),
+        //                     UserID: device.uuid
+        //                 }; 
 
-        var msg = new EventData(eventBody);
+        // var msg = new EventData(eventBody);
 
-        app.eventHubClient.sendMessage(msg, function (messagingResult) { 
-            console.log("Sent location, result: "+messagingResult.result);
-        });         
+        // app.eventHubClient.sendMessage(msg, function (messagingResult) { 
+        //     console.log("Sent location, result: "+messagingResult.result);
+        // });         
     }
 };
 
