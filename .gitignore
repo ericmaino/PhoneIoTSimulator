@@ -2,3 +2,7 @@ icon.png
 platforms/**
 plugins/**
 node_modules/**
+.vs/**
+bld/**
+bin/**
+*.user
