@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/irjudson/PhoneIoTSimulator.png?label=ready&title=Ready)](https://waffle.io/irjudson/PhoneIoTSimulator)
 Cordova IoT Simulator Application
 =================================
 
