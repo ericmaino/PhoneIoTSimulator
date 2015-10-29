@@ -70,3 +70,7 @@ body {
 .btn-config:active {
     color: #fff;
 }
+
+#eventhub-config {
+    width: 80%;
+}

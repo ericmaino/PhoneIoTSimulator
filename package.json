@@ -1,0 +1,24 @@
+{
+  "name": "iot-simulator",
+  "version": "1.0.0",
+  "description": "Cordova IoT Simulator Application",
+  "main": "index.js",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "cordova-icon": "^0.3.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/irjudson/PhoneIoTSimulator.git"
+  },
+  "author": "Ivan R. Judson <irjudson@gmail.com> (http://irjudson.org)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/irjudson/PhoneIoTSimulator/issues"
+  },
+  "homepage": "https://github.com/irjudson/PhoneIoTSimulator#readme"
+}

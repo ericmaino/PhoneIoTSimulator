@@ -48,7 +48,32 @@
  
         <div id="map-canvas"></div>
         
-        <div id="config"></div>
+        <div id="config" class="container">
+            <div id="eventhub-config">
+                <div id="form-group">
+                    <label for="eventhubname">EventHub Name</label>
+                    <input type="text" class="form-control" id="eventhubname" placeholder="EventHub Name">
+                </div>
+                <div id="form-group">
+                    <label for="eventhubnamespace">EventHub Namespace</label>
+                    <input type="text" class="form-control" id="eventhubnamespace" placeholder="EventHub Namespace">                    
+                </div>
+                <div id="form-group">
+                    <label for="eventhubsaskey">EventHub SAS Key</label>
+                    <input type="text" class="form-control" id="eventhubsaskey" placeholder="EventHub SAS Key">                    
+                </div>
+                <div id="form-group">
+                    <label for="eventhubsaskeyname">EventHub SAS Key Name</label>
+                    <input type="text" class="form-control" id="eventhubsaskeyname" placeholder="EventHub SAS Key Name">
+                </div>
+                <div id="form-group">
+                    <label for="eventhubtimeout">EventHub Timeout</label>
+                    <input type="text" class="form-control" id="eventhubtimeout" placeholder="10">                    
+                </div>
+                <button id="btn-config-save" class="btn navbar-btn btn-default glyphicon glyphicon-save"></button>
+                <button id="btn-config-cancel" class="btn navbar-btn btn-default glyphicon glyphicon-cancel"></button>                      
+            </div>
+        </div>
         
         <nav id="footer" class="navbar navbar-fixed-bottom" role="navigation">
             <button id="btn-home" class="btn navbar-btn btn-default glyphicon glyphicon-screenshot"></button>    
