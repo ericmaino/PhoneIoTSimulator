@@ -28,11 +28,13 @@ var ENV = (function() {
              */
             enabled:    localStorage.getItem('enabled')     || 'true',
             aggressive: localStorage.getItem('aggressive')  || 'false',
-            eventHubName: localStorage.getItem('eventHubName') || 'EVENTHUB_NAME',
-            eventHubNamespace: localStorage.getItem('eventHubNamespace') || 'EVENTHUB_NAMESPACE',
-            eventHubSASKey: localStorage.getItem('eventHubSASKey') || 'EVENTHUB_KEY',
-            eventHubSASKeyName: localStorage.getItem('eventHubSASKeyName') || 'EVENTHUB_KEY_NAME',
-            eventHubTimeout: localStorage.getItem('eventHubTimeout') || 10,
+            eventHub: {
+                eventHubName: localStorage.getItem('eventHubName') || 'EventHub Name',
+                eventHubNamespace: localStorage.getItem('eventHubNamespace') || 'EventHub Namespace',
+                eventHubSASKey: localStorage.getItem('eventHubSASKey') || 'EventHub SAS Key',
+                eventHubSASKeyName: localStorage.getItem('eventHubSASKeyName') || 'EventHub SAS Key Name',
+                eventHubTimeout: localStorage.getItem('eventHubTimeout') || 10,                
+            },
             beacons: [
             ]
         },
@@ -133,7 +135,7 @@ var app = {
             footer = $('#footer'),
             canvas = $('#map-canvas'),
             config = $('#config'),
-            configHeight = window.innerHeight - header[0].clientHeight - footer[0].clientHeight;;
+            eventHubConfig = ENV.settings['eventHub'];
         
         if (app.configDisplayed) {
             config.hide();
@@ -141,7 +143,37 @@ var app = {
             app.configDisplayed = false;
         } else {
             canvas.hide();
+            // load up current settings
+            for (var key in eventHubConfig) {
+                    $('input#'+key).value = eventHubConfig[key];
+               }
             config.show();
+            this.btnConfigSave = $('button#btn-config-save');
+            this.btnConfigSave.on('click', function() {
+               // read values in to config
+               for (var key in eventHubConfig) {
+                   if (key === "eventHubTimeout") {
+                        eventHubConfig[key] = $('input#'+key).value;
+                   } else {
+                        eventHubConfig[key] = $('input#'+key).value;
+                   }
+               }
+
+               for (var key in eventHubConfig) {
+                   console.log("New Setting: " + key + " => " + eventHubConfig[key]);
+               }
+
+               // go back to previous view
+               config.hide();
+               canvas.show();
+               app.configDisplayed = false; 
+            });
+            this.btnConfigCancel = $('button#btn-config-cancel');
+            this.btnConfigCancel.on('click', function() {
+                config.hide();
+                canvas.show();
+                app.configDisplayed = false;
+            });
             app.configDisplayed = true;
         }
     },

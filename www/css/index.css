@@ -67,7 +67,7 @@ body {
     text-align: center;
 }
 
-.btn-config:active {
+.btn-config:active, .btn-config:hover, .btn-config:selected {
     color: #fff;
 }
 

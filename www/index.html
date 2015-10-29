@@ -50,29 +50,37 @@
         
         <div id="config" class="container">
             <div id="eventhub-config">
+                <h3>Event Hub Configuration:</h3>
                 <div id="form-group">
-                    <label for="eventhubname">EventHub Name</label>
-                    <input type="text" class="form-control" id="eventhubname" placeholder="EventHub Name">
+                    <label for="eventHubName">EventHub Name</label>
+                    <input type="text" class="form-control" id="eventHubName" placeholder="EventHub Name">
                 </div>
                 <div id="form-group">
-                    <label for="eventhubnamespace">EventHub Namespace</label>
-                    <input type="text" class="form-control" id="eventhubnamespace" placeholder="EventHub Namespace">                    
+                    <label for="eventHubNamespace">EventHub Namespace</label>
+                    <input type="text" class="form-control" id="eventHubNamespace" placeholder="EventHub Namespace">                    
                 </div>
                 <div id="form-group">
-                    <label for="eventhubsaskey">EventHub SAS Key</label>
-                    <input type="text" class="form-control" id="eventhubsaskey" placeholder="EventHub SAS Key">                    
+                    <label for="eventHubSASKey">EventHub SAS Key</label>
+                    <input type="text" class="form-control" id="eventHubSASKey" placeholder="EventHub SAS Key">                    
                 </div>
                 <div id="form-group">
-                    <label for="eventhubsaskeyname">EventHub SAS Key Name</label>
-                    <input type="text" class="form-control" id="eventhubsaskeyname" placeholder="EventHub SAS Key Name">
+                    <label for="eventHubSASKeyName">EventHub SAS Key Name</label>
+                    <input type="text" class="form-control" id="eventHubSASKeyName" placeholder="EventHub SAS Key Name">
                 </div>
                 <div id="form-group">
-                    <label for="eventhubtimeout">EventHub Timeout</label>
-                    <input type="text" class="form-control" id="eventhubtimeout" placeholder="10">                    
+                    <label for="eventHubTimeout">EventHub Timeout</label>
+                    <input type="text" class="form-control" id="eventHubTimeout" placeholder="10">                    
                 </div>
-                <button id="btn-config-save" class="btn navbar-btn btn-default glyphicon glyphicon-save"></button>
-                <button id="btn-config-cancel" class="btn navbar-btn btn-default glyphicon glyphicon-cancel"></button>                      
             </div>
+            
+            <div id="sensor-config">
+                <h3>Sensors:</h3>
+            </div>
+
+            <div id="buttons" class="pull-center">
+                <button id="btn-config-save" class="btn navbar-btn btn-default glyphicon glyphicon-ok-circle"></button>
+                <button id="btn-config-cancel" class="btn navbar-btn btn-default glyphicon glyphicon-remove-circle"></button>
+            </div>                      
         </div>
         
         <nav id="footer" class="navbar navbar-fixed-bottom" role="navigation">
