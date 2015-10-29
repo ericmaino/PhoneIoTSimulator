@@ -143,6 +143,7 @@ var app = {
             app.configDisplayed = false;
         } else {
             canvas.hide();
+            
             // load up current settings
             for (var key in eventHubConfig) {
                     $('input#'+key).value = eventHubConfig[key];
@@ -163,6 +164,8 @@ var app = {
                    console.log("New Setting: " + key + " => " + eventHubConfig[key]);
                }
 
+               this.connectToEventHub();
+               
                // go back to previous view
                config.hide();
                canvas.show();
@@ -581,20 +584,24 @@ var app = {
         app.previousLocation = location;
         
         // Send to eventhub
-        console.log("Sending location: "+location+" to eventhub.");
-        
-        // var eventBody = { 
-        //                     Latitude: location.latitude,
-        //                     Longitude: location.longitude,
-        //                     Timestamp: new Date(),
-        //                     UserID: device.uuid
-        //                 }; 
-
-        // var msg = new EventData(eventBody);
-
-        // app.eventHubClient.sendMessage(msg, function (messagingResult) { 
-        //     console.log("Sent location, result: "+messagingResult.result);
-        // });         
+        if (this.eventHubClient) {
+            console.log("Sending location: "+location+" to eventhub.");
+            
+            var eventBody = { 
+                                Latitude: location.latitude,
+                                Longitude: location.longitude,
+                                Timestamp: new Date(),
+                                UserID: device.uuid
+                            };
+    
+            var msg = new EventData(eventBody);
+    
+            app.eventHubClient.sendMessage(msg, function (messagingResult) { 
+                console.log("Sent location, result: "+messagingResult.result);
+            });                     
+        } else {
+            console.log("EventHub Client not connected. Please reconfigure your eventhub settings.");
+        }
     }
 };
 
