@@ -28,6 +28,7 @@
         <link rel="stylesheet" type="text/css" href="css/bootstrap-min.css" />
         <link rel="stylesheet" type="text/css" href="css/index.css" />
         <link rel="stylesheet" type="text/css" href="css/leaflet.css" />
+        <link rel="stylesheet" type="text/css" href="css/leaflet-compass.min.css" />
         <title>IoT Simulator</title>
     </head>
     <body>
@@ -75,6 +76,15 @@
             
             <div id="sensor-config">
                 <h3>Sensors:</h3>
+                <div id="form-group">
+                    <input type="checkbox" name="include-geolocation" value="false" /> Geolocation
+                </div>
+                <div id="form-group">
+                    <input type="checkbox" name="include-accelerometer" value="false" /> Accelerometer
+                </div>
+                <div id="form-group">
+                    <input type="checkbox" name="include-compass" value="false" /> Compass
+                </div>
             </div>
 
             <div id="buttons" class="pull-center">
@@ -86,15 +96,15 @@
         <nav id="footer" class="navbar navbar-fixed-bottom" role="navigation">
             <button id="btn-home" class="btn navbar-btn btn-default glyphicon glyphicon-screenshot"></button>    
             <button id="btn-reset" class="btn btn-default glyphicon">Reset</button>
-            <button id="btn-pace" data-id="false" class="btn navbar-btn">Aggressive</button>
             <button id="btn-enabled" class="btn navbar-btn" data-id="true">Start</button>
-            <button id="btn-beacons" class="btn navbar-btn btn-default glyphicon glyphicon-asterisk"></button>
+            <!--<button id="btn-beacons" class="btn navbar-btn btn-default glyphicon glyphicon-asterisk"></button>-->
         </nav>
 
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="js/jquery-2.1.1.js"></script>
         <script type="text/javascript" src="js/servicebusjssdk-1.2.min.js"></script>
         <script type="text/javascript" src="js/leaflet.js"></script>
+        <script type="text/javascript" src="js/leaflet-compass.min.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
     </body>
 </html>
