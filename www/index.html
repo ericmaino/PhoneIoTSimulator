@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
@@ -108,3 +109,97 @@
         <script type="text/javascript" src="js/index.js"></script>
     </body>
 </html>
+=======
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://maps.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://maps.googleapis.com https://maps.gstatic.com; object-src 'self'">
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/bootstrap-min.css" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <link rel="stylesheet" type="text/css" href="css/leaflet.css" />
+        <title>IoT Simulator</title>
+    </head>
+    <body>
+        <nav id="header" class="header">
+            <div class="container">
+                <div class="pull-left">
+                    <h2>IoT Simulator</h2>
+                </div>
+                <div class="navbar-header pull-right">
+                    <ul class="nav pull-left">
+                        <li class="navbar-text pull-left">
+                            <button id="btn-config" class="btn navbar-btn glyphicon glyphicon-cog"></button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+ 
+        <div id="map-canvas"></div>
+        
+        <div id="config" class="container">
+            <div id="eventhub-config">
+                <div id="form-group">
+                    <label for="eventhubname">EventHub Name</label>
+                    <input type="text" class="form-control" id="eventhubname" placeholder="EventHub Name">
+                </div>
+                <div id="form-group">
+                    <label for="eventhubnamespace">EventHub Namespace</label>
+                    <input type="text" class="form-control" id="eventhubnamespace" placeholder="EventHub Namespace">                    
+                </div>
+                <div id="form-group">
+                    <label for="eventhubsaskey">EventHub SAS Key</label>
+                    <input type="text" class="form-control" id="eventhubsaskey" placeholder="EventHub SAS Key">                    
+                </div>
+                <div id="form-group">
+                    <label for="eventhubsaskeyname">EventHub SAS Key Name</label>
+                    <input type="text" class="form-control" id="eventhubsaskeyname" placeholder="EventHub SAS Key Name">
+                </div>
+                <div id="form-group">
+                    <label for="eventhubtimeout">EventHub Timeout</label>
+                    <input type="text" class="form-control" id="eventhubtimeout" placeholder="10">                    
+                </div>
+                <button id="btn-config-save" class="btn navbar-btn btn-default glyphicon glyphicon-save"></button>
+                <button id="btn-config-cancel" class="btn navbar-btn btn-default glyphicon glyphicon-cancel"></button>                      
+            </div>
+        </div>
+        
+        <nav id="footer" class="navbar navbar-fixed-bottom" role="navigation">
+            <button id="btn-home" class="btn navbar-btn btn-default glyphicon glyphicon-screenshot"></button>    
+            <button id="btn-reset" class="btn btn-default glyphicon">Reset</button>
+            <button id="btn-pace" data-id="false" class="btn navbar-btn">Aggressive</button>
+            <button id="btn-enabled" class="btn navbar-btn" data-id="true">Start</button>
+            <button id="btn-beacons" class="btn navbar-btn btn-default glyphicon glyphicon-asterisk"></button>
+        </nav>
+
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/jquery-2.1.1.js"></script>
+        <script type="text/javascript" src="js/servicebusjssdk-1.2.min.js"></script>
+        <script type="text/javascript" src="js/leaflet.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+    </body>
+</html>
+>>>>>>> VS git tools are terrible
