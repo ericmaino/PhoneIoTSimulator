@@ -9,6 +9,7 @@
     </author>
     <preference name="StatusBarStyle" value="lightcontent" />
     <preference name="BackupWebStorage" value="local"/>
+    <preference name="loadUrlTimeoutValue" value="99999999" />
     <content src="index.html" />
     <access origin="*" />
 </widget>

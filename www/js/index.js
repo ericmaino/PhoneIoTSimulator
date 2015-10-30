@@ -176,7 +176,32 @@ var app = {
         }).addTo(app.map);
         app.mapLayers = new L.LayerGroup().addTo(app.map);
         
+        // Compass control to show compass reading
         app.map.addControl( new L.Control.Compass() );
+        
+        // Realtime accelerometer graph
+        var accelerometerOverlay = L.d3SvgOverlay(function(sel,proj){
+            
+        var minLogPop = Math.log2(d3.min(cities,function(d){return d.population;}));
+        var citiesUpd = sel.selectAll('circle').data(cities);
+        citiesUpd.enter()
+            .append('circle')
+            .attr('r',function(d){return Math.log2(d.population) - minLogPop + 2;})
+            .attr('cx',function(d){return proj.latLngToLayerPoint(d.latLng).x;})
+            .attr('cy',function(d){return proj.latLngToLayerPoint(d.latLng).y;})
+            .attr('stroke','black')
+            .attr('stroke-width',1)
+            .attr('fill',function(d){return (d.place == 'city') ? "red" : "blue";});
+        });
+        
+        d3.csv("swiss-cities.csv",function(data){
+        cities = data.map(function(d){
+            d.latLng = [+d.lat,+d.lng];
+            d.population = (d.population == '') ? 2000 : +d.population; //NAs
+            return d;
+        });
+        accelerometerOverlay.addTo(map);
+        });        
     },
     renderConfigView: function () {
         var map = $('#map-canvas'),
