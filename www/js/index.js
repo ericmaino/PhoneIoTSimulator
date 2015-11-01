@@ -639,7 +639,9 @@ var app = {
             }
 
             if (ENV.settings.sensors.compass && app.heading) {
-                eventBody['Heading'] = app.heading;
+                eventBody['MagneticHeading'] = app.heading.magneticHeading;
+                eventBody['TrueHeading'] = app.heading.trueHeading;
+                eventBody['HeadingAccuracy'] = app.heading.headingAccuracy;
             }
 
             var msg = new EventData(eventBody);
