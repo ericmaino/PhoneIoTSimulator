@@ -21,16 +21,16 @@ var ENV = (function () {
     var localStorage = window.localStorage;
     var eventHubClient = null;
 
-    return {
+    var output = {
         settings: {
             /**
              * state-mgmt
              */
             eventHub: {
-                eventHubName: localStorage.getItem('eventHubName') || 'EventHub Name',
-                eventHubNamespace: localStorage.getItem('eventHubNamespace') || 'EventHub Namespace',
-                eventHubSASKey: localStorage.getItem('eventHubSASKey') || 'EventHub SAS Key',
-                eventHubSASKeyName: localStorage.getItem('eventHubSASKeyName') || 'EventHub SAS Key Name',
+                eventHubName: localStorage.getItem('eventHubName') || 'driverdemo', //'EventHub Name',
+                eventHubNamespace: localStorage.getItem('eventHubNamespace') || 'ericmaitesting', //'EventHub Namespace',
+                eventHubSASKey: localStorage.getItem('eventHubSASKey') || '50MnajPCEzPC+rvjq7rlOLRqUAQF5KewtOAlkgMUifo=', //'EventHub SAS Key',
+                eventHubSASKeyName: localStorage.getItem('eventHubSASKeyName') || 'SendOnly', //'EventHub SAS Key Name',
                 eventHubTimeout: localStorage.getItem('eventHubTimeout') || 10,
             },
             sensors: {
@@ -52,6 +52,8 @@ var ENV = (function () {
             // Save settings to local storage
         }
     }
+
+    return output;
 })()
 
 var app = {
@@ -192,7 +194,8 @@ var app = {
 
             // load up current settings
             for (var key in eventHubConfig) {
-                $('input#' + key).value = eventHubConfig[key];
+                var element = $('input#' + key);
+                element.val(eventHubConfig[key]);
             }
             for (var key in ENV.settings.sensors) {
                 $('input#include-' + key).checked = ENV.settings.sensors[key];
@@ -202,11 +205,7 @@ var app = {
             this.btnConfigSave.on('click', function () {
                 // read values in to config
                 for (var key in eventHubConfig) {
-                    if (key === "eventHubTimeout") {
-                        eventHubConfig[key] = $('input#' + key).value;
-                    } else {
-                        eventHubConfig[key] = $('input#' + key).value;
-                    }
+                    eventHubConfig[key] = $('input#' + key).val();
                 }
 
                 for (var key in eventHubConfig) {
@@ -216,8 +215,8 @@ var app = {
                 // Connect to the newly configured EventHub
                 app.connectToEventHub();
 
-                // Check the sensor toggles                
-                if ($('input#include-geolocation').checked) {
+                // Check the sensor toggles       
+                if ($('input#include-geolocation').prop('checked')) {
                     // Toggle enable variable
                     ENV.settings.sensors.geolocation = true;
                     // Set timer to update application variable, asyncronously
@@ -225,14 +224,14 @@ var app = {
                     ENV.settings.sensors.geolocation = false;
                 }
 
-                if ($('input#include-acclerometer').checked) {
+                if ($('input#include-accelerometer').prop('checked')) {
                     // Toggle enable variable
-                    ENV.settings.sensors.acclerometer = true;
+                    ENV.settings.sensors.accelerometer = true;
                 } else {
-                    ENV.settings.sensors.acclerometer = false;
+                    ENV.settings.sensors.accelerometer = false;
                 }
 
-                if ($('input#include-compass').checked) {
+                if ($('input#include-compass').prop('checked')) {
                     // Toggle enable variable
                     ENV.settings.sensors.compass = true;
                 } else {
@@ -302,12 +301,12 @@ var app = {
         console.log("Connecting event hub client.");
         app.eventHubClient = new EventHubClient(
             {
-                'name': ENV.settings.eventHubName,
+                'name': ENV.settings.eventHub.eventHubName,
                 'devicename': app.deviceId,
-                'namespace': ENV.settings.eventHubNamespace,
-                'sasKey': ENV.settings.eventHubSASKey,
-                'sasKeyName': ENV.settings.eventHubSASKeyName,
-                'timeOut': ENV.settings.eventHubTimeout,
+                'namespace': ENV.settings.eventHub.eventHubNamespace,
+                'sasKey': ENV.settings.eventHub.eventHubSASKey,
+                'sasKeyName': ENV.settings.eventHub.eventHubSASKeyName,
+                'timeOut': ENV.settings.eventHub.eventHubTimeout,
             });
         console.log("Event hub client connected.");
     },
@@ -622,24 +621,24 @@ var app = {
     sendToCloud: function () {
         // Send to eventhub
         if (this.eventHubClient) {
-            console.log("Sending location: " + location + " to eventhub.");
+            console.log("Sending location: " + app.currentLocation + " to eventhub.");
 
             var eventBody = {
                 Timestamp: new Date(),
                 UserID: app.deviceId
             };
-            if (ENV.settings.sensors.geolocation) {
-                eventBody['Latitude'] = location.latitude;
-                eventBody['Longitude'] = location.longitude;
+            if (ENV.settings.sensors.geolocation && app.currentLocation) {
+                eventBody['Latitude'] = app.currentLocation.latitude;
+                eventBody['Longitude'] = app.currentLocation.longitude;
             }
 
-            if (ENV.settings.sensors.accelerometer) {
+            if (ENV.settings.sensors.accelerometer && app.acceleration) {
                 eventBody['Accleration_X'] = app.acceleration.x;
                 eventBody['Accleration_Y'] = app.acceleration.y;
                 eventBody['Accleration_Z'] = app.acceleration.z;
             }
 
-            if (ENV.settings.sensors.compass) {
+            if (ENV.settings.sensors.compass && app.heading) {
                 eventBody['Heading'] = app.heading;
             }
 
@@ -703,6 +702,7 @@ var app = {
         app.map.panTo(latlng);
         app.previousLocation = app.currentLocation;
         app.currentLocation = location;
+        this.sendToCloud();
     }
 };
 
