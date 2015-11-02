@@ -569,10 +569,13 @@ var app = {
         app.accelerationWatchId = window.navigator.accelerometer.watchAcceleration(
             function (acceleration) {
                 app.acceleration = acceleration;
+                app.sendToCloud();
             },
             function () {
                 console.log("Error capturing acceleration.");
-            }, {});
+            }, {
+                frequency: 250
+            });
     },
     stopAccelerometer: function () {
         window.navigator.accelerometer.clearWatch(app.accelerationWatchId);
