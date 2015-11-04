@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -18,93 +18,91 @@
     under the License.
 -->
 <html>
-    <head>
-        <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://maps.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://maps.googleapis.com https://maps.gstatic.com; object-src 'self'">
-        <meta charset="utf-8" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="msapplication-tap-highlight" content="no" />
-        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
-        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-        <link rel="stylesheet" type="text/css" href="css/bootstrap-min.css" />
-        <link rel="stylesheet" type="text/css" href="css/index.css" />
-        <link rel="stylesheet" type="text/css" href="css/leaflet.css" />
-        <link rel="stylesheet" type="text/css" href="css/leaflet-compass.min.css" />
-        <title>IoT Simulator</title>
-    </head>
-    <body>
-        <nav id="header" class="header">
-            <div class="container">
-                <div class="pull-left">
-                    <h2>IoT Simulator</h2>
-                </div>
-                <div class="navbar-header pull-right">
-                    <ul class="nav pull-left">
-                        <li class="navbar-text pull-left">
-                            <button id="btn-config" class="btn navbar-btn glyphicon glyphicon-cog"></button>
-                        </li>
-                    </ul>
-                </div>
+<head>
+    <meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline' https://*.googleapis.com https://maps.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://maps.googleapis.com https://maps.gstatic.com; object-src 'self'">
+    <meta charset="utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-min.css" />
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+    <link rel="stylesheet" type="text/css" href="css/leaflet.css" />
+    <link rel="stylesheet" type="text/css" href="css/leaflet-compass.min.css" />
+    <title>IoT Simulator</title>
+</head>
+<body>
+    <nav id="header" class="header">
+        <div class="container">
+            <div class="pull-left">
+                <h2>IoT Simulator</h2>
             </div>
-        </nav>
- 
-        <div id="map-canvas"></div>
-        
-        <div id="config" class="container">
-            <div id="eventhub-config">
-                <h3>Event Hub Configuration:</h3>
-                <div id="form-group">
-                    <label for="eventHubName">EventHub Name</label>
-                    <input type="text" class="form-control" id="eventHubName" placeholder="EventHub Name">
-                </div>
-                <div id="form-group">
-                    <label for="eventHubNamespace">EventHub Namespace</label>
-                    <input type="text" class="form-control" id="eventHubNamespace" placeholder="EventHub Namespace">                    
-                </div>
-                <div id="form-group">
-                    <label for="eventHubSASKey">EventHub SAS Key</label>
-                    <input type="text" class="form-control" id="eventHubSASKey" placeholder="EventHub SAS Key">                    
-                </div>
-                <div id="form-group">
-                    <label for="eventHubSASKeyName">EventHub SAS Key Name</label>
-                    <input type="text" class="form-control" id="eventHubSASKeyName" placeholder="EventHub SAS Key Name">
-                </div>
-                <div id="form-group">
-                    <label for="eventHubTimeout">EventHub Timeout</label>
-                    <input type="text" class="form-control" id="eventHubTimeout" placeholder="10">                    
-                </div>
+            <div class="navbar-header pull-right">
+                <ul class="nav pull-left">
+                    <li class="navbar-text pull-left">
+                        <button id="btn-config" class="btn navbar-btn glyphicon glyphicon-cog"></button>
+                    </li>
+                </ul>
             </div>
-            
-            <div id="sensor-config">
-                <h3>Sensors:</h3>
-                <div id="form-group">
-                    <input type="checkbox" name="include-geolocation" value="false" /> Geolocation
-                </div>
-                <div id="form-group">
-                    <input type="checkbox" name="include-accelerometer" value="false" /> Accelerometer
-                </div>
-                <div id="form-group">
-                    <input type="checkbox" name="include-compass" value="false" /> Compass
-                </div>
-            </div>
-
-            <div id="buttons" class="pull-center">
-                <button id="btn-config-save" class="btn navbar-btn btn-default glyphicon glyphicon-ok-circle"></button>
-                <button id="btn-config-cancel" class="btn navbar-btn btn-default glyphicon glyphicon-remove-circle"></button>
-            </div>                      
         </div>
-        
-        <nav id="footer" class="navbar navbar-fixed-bottom" role="navigation">
-            <button id="btn-home" class="btn navbar-btn btn-default glyphicon glyphicon-screenshot"></button>    
-            <button id="btn-reset" class="btn btn-default glyphicon">Reset</button>
-            <button id="btn-enabled" class="btn navbar-btn" data-id="true">Start</button>
-            <!--<button id="btn-beacons" class="btn navbar-btn btn-default glyphicon glyphicon-asterisk"></button>-->
-        </nav>
+    </nav>
 
-        <script type="text/javascript" src="cordova.js"></script>
-        <script type="text/javascript" src="js/jquery-2.1.1.js"></script>
-        <script type="text/javascript" src="js/servicebusjssdk-1.2.min.js"></script>
-        <script type="text/javascript" src="js/leaflet.js"></script>
-        <script type="text/javascript" src="js/leaflet-compass.min.js"></script>
-        <script type="text/javascript" src="js/index.js"></script>
-    </body>
+    <div id="map-canvas"></div>
+
+    <div id="config" class="container">
+        <div id="eventhub-config">
+            <h3>Event Hub Configuration:</h3>
+            <div id="form-group">
+                <label for="eventHubName">EventHub Name</label>
+                <input type="text" class="form-control" id="eventHubName" placeholder="EventHub Name">
+            </div>
+            <div id="form-group">
+                <label for="eventHubNamespace">EventHub Namespace</label>
+                <input type="text" class="form-control" id="eventHubNamespace" placeholder="EventHub Namespace">
+            </div>
+            <div id="form-group">
+                <label for="eventHubSASKey">EventHub SAS Key</label>
+                <input type="text" class="form-control" id="eventHubSASKey" placeholder="EventHub SAS Key">
+            </div>
+            <div id="form-group">
+                <label for="eventHubSASKeyName">EventHub SAS Key Name</label>
+                <input type="text" class="form-control" id="eventHubSASKeyName" placeholder="EventHub SAS Key Name">
+            </div>
+            <div id="form-group">
+                <label for="eventHubTimeout">EventHub Timeout</label>
+                <input type="text" class="form-control" id="eventHubTimeout" placeholder="10">
+            </div>
+        </div>
+
+        <div id="sensor-config">
+            <h3>Sensors:</h3>
+            <div id="form-group">
+                <input type="checkbox" id="include-geolocation" /> Geolocation
+            </div>
+            <div id="form-group">
+                <input type="checkbox" id="include-accelerometer" /> Accelerometer
+            </div>
+            <div id="form-group">
+                <input type="checkbox" id="include-compass" /> Compass
+            </div>
+        </div>
+        <div id="buttons" class="pull-center">
+            <button id="btn-config-save" class="btn navbar-btn btn-default glyphicon glyphicon-ok-circle"></button>
+            <button id="btn-config-cancel" class="btn navbar-btn btn-default glyphicon glyphicon-remove-circle"></button>
+        </div>
+    </div>
+
+    <nav id="footer" class="navbar navbar-fixed-bottom" role="navigation">
+        <button id="btn-home" class="btn navbar-btn btn-default glyphicon glyphicon-screenshot"></button>
+        <button id="btn-reset" class="btn btn-default glyphicon">Reset</button>
+        <button id="btn-enabled" class="btn navbar-btn" data-id="true">Start</button>
+        <!--<button id="btn-beacons" class="btn navbar-btn btn-default glyphicon glyphicon-asterisk"></button>-->
+    </nav>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/jquery-2.1.1.js"></script>
+    <script type="text/javascript" src="js/servicebusjssdk-1.2.min.js"></script>
+    <script type="text/javascript" src="js/leaflet.js"></script>
+    <script type="text/javascript" src="js/leaflet-compass.min.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+</body>
 </html>

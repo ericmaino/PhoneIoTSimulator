@@ -21,16 +21,16 @@ var ENV = (function () {
     var localStorage = window.localStorage;
     var eventHubClient = null;
 
-    return {
+    var output = {
         settings: {
             /**
              * state-mgmt
              */
             eventHub: {
-                eventHubName: localStorage.getItem('eventHubName') || 'EventHub Name',
-                eventHubNamespace: localStorage.getItem('eventHubNamespace') || 'EventHub Namespace',
-                eventHubSASKey: localStorage.getItem('eventHubSASKey') || 'EventHub SAS Key',
-                eventHubSASKeyName: localStorage.getItem('eventHubSASKeyName') || 'EventHub SAS Key Name',
+                eventHubName: localStorage.getItem('eventHubName') || 'driverdemo', //'EventHub Name',
+                eventHubNamespace: localStorage.getItem('eventHubNamespace') || 'ericmaitesting', //'EventHub Namespace',
+                eventHubSASKey: localStorage.getItem('eventHubSASKey') || '50MnajPCEzPC+rvjq7rlOLRqUAQF5KewtOAlkgMUifo=', //'EventHub SAS Key',
+                eventHubSASKeyName: localStorage.getItem('eventHubSASKeyName') || 'SendOnly', //'EventHub SAS Key Name',
                 eventHubTimeout: localStorage.getItem('eventHubTimeout') || 10,
             },
             sensors: {
@@ -48,10 +48,12 @@ var ENV = (function () {
             localStorage.setItem(key, newValue);
             return newValue;
         },
-        save: function() {
+        save: function () {
             // Save settings to local storage
         }
     }
+
+    return output;
 })()
 
 var app = {
@@ -99,9 +101,9 @@ var app = {
      * @property {Heading} the latest compass heading value
      */
     heading: undefined,
-   /**
-     * @property {Watch ID} the watch id for the compass.
-     */
+    /**
+      * @property {Watch ID} the watch id for the compass.
+      */
     compassWatchId: undefined,
     /**
       * @property {EventHubClient} a client to the eventhub to send data to.
@@ -135,7 +137,7 @@ var app = {
      * @property {lastServiceScanEvent} when was the last service scan done
      */
     lastServiceScanEvent: new Date(),
-      
+
     /**
     * @private
     */
@@ -144,14 +146,14 @@ var app = {
     btnHome: undefined,
     btnReset: undefined,
     configDisplayed: false,
-    
+
     // Application Constructor  
     initialize: function () {
         if (typeof device !== 'undefined') {
             app.deviceId = device.uuid;
         } else {
-            app.deviceId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            app.deviceId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
         }
@@ -175,8 +177,8 @@ var app = {
             accessToken: 'pk.eyJ1IjoiaXJqdWRzb24iLCJhIjoiY2lnMTk4dzFuMHBhbnV3bHZsMmE0Ym1hcCJ9.LQSOcDk_TOrObpLYB-7_xw'
         }).addTo(app.map);
         app.mapLayers = new L.LayerGroup().addTo(app.map);
-        
-        app.map.addControl( new L.Control.Compass() );
+
+        app.map.addControl(new L.Control.Compass());
     },
     renderConfigView: function () {
         var map = $('#map-canvas'),
@@ -189,24 +191,21 @@ var app = {
             app.configDisplayed = false;
         } else {
             map.hide();
-            
+
             // load up current settings
             for (var key in eventHubConfig) {
-                $('input#' + key).value = eventHubConfig[key];
+                var element = $('input#' + key);
+                element.val(eventHubConfig[key]);
             }
             for (var key in ENV.settings.sensors) {
-                $('input#include-'+key).checked = ENV.settings.sensors[key]; 
+                $('input#include-' + key).checked = ENV.settings.sensors[key];
             }
             config.show();
             this.btnConfigSave = $('button#btn-config-save');
             this.btnConfigSave.on('click', function () {
                 // read values in to config
                 for (var key in eventHubConfig) {
-                    if (key === "eventHubTimeout") {
-                        eventHubConfig[key] = $('input#' + key).value;
-                    } else {
-                        eventHubConfig[key] = $('input#' + key).value;
-                    }
+                    eventHubConfig[key] = $('input#' + key).val();
                 }
 
                 for (var key in eventHubConfig) {
@@ -215,9 +214,9 @@ var app = {
 
                 // Connect to the newly configured EventHub
                 app.connectToEventHub();
-                
-                // Check the sensor toggles                
-                if ($('input#include-geolocation').checked) {
+
+                // Check the sensor toggles       
+                if ($('input#include-geolocation').prop('checked')) {
                     // Toggle enable variable
                     ENV.settings.sensors.geolocation = true;
                     // Set timer to update application variable, asyncronously
@@ -225,20 +224,20 @@ var app = {
                     ENV.settings.sensors.geolocation = false;
                 }
 
-                if ($('input#include-acclerometer').checked) {
+                if ($('input#include-accelerometer').prop('checked')) {
                     // Toggle enable variable
-                    ENV.settings.sensors.acclerometer = true;
+                    ENV.settings.sensors.accelerometer = true;
                 } else {
-                    ENV.settings.sensors.acclerometer = false;
+                    ENV.settings.sensors.accelerometer = false;
                 }
 
-                if ($('input#include-compass').checked) {
+                if ($('input#include-compass').prop('checked')) {
                     // Toggle enable variable
                     ENV.settings.sensors.compass = true;
                 } else {
                     ENV.settings.sensors.compass = false;
                 }
-               
+
                 // go back to previous view
                 config.hide();
                 map.show();
@@ -302,12 +301,12 @@ var app = {
         console.log("Connecting event hub client.");
         app.eventHubClient = new EventHubClient(
             {
-                'name': ENV.settings.eventHubName,
+                'name': ENV.settings.eventHub.eventHubName,
                 'devicename': app.deviceId,
-                'namespace': ENV.settings.eventHubNamespace,
-                'sasKey': ENV.settings.eventHubSASKey,
-                'sasKeyName': ENV.settings.eventHubSASKeyName,
-                'timeOut': ENV.settings.eventHubTimeout,
+                'namespace': ENV.settings.eventHub.eventHubNamespace,
+                'sasKey': ENV.settings.eventHub.eventHubSASKey,
+                'sasKeyName': ENV.settings.eventHub.eventHubSASKeyName,
+                'timeOut': ENV.settings.eventHub.eventHubTimeout,
             });
         console.log("Event hub client connected.");
     },
@@ -330,7 +329,7 @@ var app = {
         */
         var callbackFn = function (location) {
             console.log('[js] BackgroundGeoLocation callback:  ' + location.latitude + ',' + location.longitude);
-            
+
             // Update our current-position marker.
             app.updateLocation(location);
 
@@ -365,18 +364,18 @@ var app = {
             debug: false, // <-- enable this hear sounds for background-geolocation life-cycle.
             stopOnTerminate: true // <-- enable this to clear background location settings when the app terminates
         });
-        
+
         // Turn ON the background-geolocation system.  The user will be tracked whenever they suspend the app.
         if (ENV.settings.sensors.geolocation == true) {
             bgGeo.start();
         }
     },
-    
+
     // Run a timer to restart scan in case the device does
     // not automatically perform continuous scan.
     runScanTimer: function () {
         var timeSinceLastScan = new Date() - app.lastScanEvent;
-       	if (!app.isScanning && timeSinceLastScan > app.scanInterval) {
+        if (!app.isScanning && timeSinceLastScan > app.scanInterval) {
             console.log("Not scanning and wait delay passed. Let's run this bugger...");
             if (app.scanTimer) {
                 console.log("Clearing scan timer.");
@@ -410,7 +409,7 @@ var app = {
                         app.stopBLEScan();
                         console.log("Added to app.");
                         app.beacons[newDevice.address] = { deviceInfo: newDevice };
-                       	evothings.ble.connect(newDevice.address, function (r) {
+                        evothings.ble.connect(newDevice.address, function (r) {
                             console.log('connect ' + r.deviceHandle + ' state ' + r.state);
                             if (r.state == 2) // connected
                             {
@@ -418,8 +417,8 @@ var app = {
                                 app.getServices(r.deviceHandle);
                             }
                         }, function (errorCode) {
-                                console.log('connect error: ' + errorCode);
-                            });
+                            console.log('connect error: ' + errorCode);
+                        });
                     }
                 }
             }, function (errorCode) {
@@ -452,7 +451,7 @@ var app = {
                     for (var di in c.descriptors) {
                         var d = c.descriptors[di];
                         console.log('  d' + d.handle + ': ' + d.uuid);
-    
+
                         // This be the human-readable name of the characteristic.
                         if (d.uuid == "00002901-0000-1000-8000-00805f9b34fb") {
                             var h = d.handle;
@@ -475,8 +474,8 @@ var app = {
             }
             console.log("done.");
         }, function (errorCode) {
-                console.log('readAllServiceData error: ' + errorCode);
-            });
+            console.log('readAllServiceData error: ' + errorCode);
+        });
     },
     onClickBeacons: function () {
         console.log("Clicked beacon button!");
@@ -516,7 +515,7 @@ var app = {
         app.currentLocation = undefined;
         app.locations = [];
     },
-    
+
     onClickToggleEnabled: function (value) {
         var bgGeo = window.plugins.backgroundGeoLocation,
             btnEnabled = app.btnEnabled,
@@ -541,7 +540,7 @@ var app = {
             app.stopCompass();
         }
     },
-    
+
     startPositionWatch: function () {
         var fgGeo = window.navigator.geolocation;
         if (app.locationWatchId) {
@@ -551,13 +550,13 @@ var app = {
         app.locationWatchId = fgGeo.watchPosition(function (location) {
             app.updateLocation(location.coords);
         }, function () { }, {
-                enableHighAccuracy: true,
-                maximumAge: 5000,
-                frequency: 10000,
-                timeout: 10000
-            });
+            enableHighAccuracy: true,
+            maximumAge: 5000,
+            frequency: 10000,
+            timeout: 10000
+        });
     },
-    
+
     stopPositionWatch: function () {
         var fgGeo = window.navigator.geolocation;
         if (app.locationWatchId) {
@@ -565,35 +564,38 @@ var app = {
             app.locationWatchId = undefined;
         }
     },
-    
-    startAccelerometer: function() {
+
+    startAccelerometer: function () {
         app.accelerationWatchId = window.navigator.accelerometer.watchAcceleration(
-            function(acceleration) { 
-                app.acceleration = acceleration; 
-            }, 
-            function() { 
-                console.log("Error capturing acceleration."); 
-            }, {});  
+            function (acceleration) {
+                app.acceleration = acceleration;
+                app.sendToCloud();
+            },
+            function () {
+                console.log("Error capturing acceleration.");
+            }, {
+                frequency: 250
+            });
     },
-    stopAccelerometer: function() {
+    stopAccelerometer: function () {
         window.navigator.accelerometer.clearWatch(app.accelerationWatchId);
         app.accelerationWatchId = undefined;
     },
-    
-    startCompass: function() {
+
+    startCompass: function () {
         app.compassWatchID = window.navigator.compass.watchHeading(
-            function(heading) { 
-                app.heading = heading; 
-            }, 
-            function() { 
-                console.log("Error reading compass."); 
+            function (heading) {
+                app.heading = heading;
+            },
+            function () {
+                console.log("Error reading compass.");
             });
     },
-    stopCompass: function() {
+    stopCompass: function () {
         window.navigator.compass.clearWatch(app.compassWatchId);
         app.compassWatchId = undefined;
     },
-    
+
     onOnline: function () {
         app.map.locate({ setView: true, maxZoom: 16 });
     },
@@ -622,25 +624,27 @@ var app = {
     sendToCloud: function () {
         // Send to eventhub
         if (this.eventHubClient) {
-            console.log("Sending location: " + location + " to eventhub.");
+            console.log("Sending location: " + app.currentLocation + " to eventhub.");
 
             var eventBody = {
                 Timestamp: new Date(),
                 UserID: app.deviceId
             };
-            if (ENV.settings.sensors.geolocation) {
-                eventBody['Latitude'] = location.latitude;
-                eventBody['Longitude'] = location.longitude;
+            if (ENV.settings.sensors.geolocation && app.currentLocation) {
+                eventBody['Latitude'] = app.currentLocation.latitude;
+                eventBody['Longitude'] = app.currentLocation.longitude;
             }
 
-            if (ENV.settings.sensors.accelerometer) {
+            if (ENV.settings.sensors.accelerometer && app.acceleration) {
                 eventBody['Accleration_X'] = app.acceleration.x;
                 eventBody['Accleration_Y'] = app.acceleration.y;
                 eventBody['Accleration_Z'] = app.acceleration.z;
             }
 
-            if (ENV.settings.sensors.compass) {
-                eventBody['Heading'] = app.heading;
+            if (ENV.settings.sensors.compass && app.heading) {
+                eventBody['MagneticHeading'] = app.heading.magneticHeading;
+                eventBody['TrueHeading'] = app.heading.trueHeading;
+                eventBody['HeadingAccuracy'] = app.heading.headingAccuracy;
             }
 
             var msg = new EventData(eventBody);
@@ -652,11 +656,16 @@ var app = {
             console.log("EventHub Client not connected. Please reconfigure your eventhub settings.");
         }
     },
-    
+
     updateLocation: function (location) {
         console.log('Called updateLocation');
+
+        if (!app.mapLayers) {
+            return;
+        }
+
         var latlng = [location.latitude, location.longitude];
-        if (! app.location) {
+        if (!app.location) {
             app.location = L.circle(latlng, 5, {
                 color: 'red',
                 stroke: false,
@@ -698,6 +707,7 @@ var app = {
         app.map.panTo(latlng);
         app.previousLocation = app.currentLocation;
         app.currentLocation = location;
+        this.sendToCloud();
     }
 };
 
