@@ -10,6 +10,8 @@
     <preference name="StatusBarStyle" value="lightcontent" />
     <preference name="BackupWebStorage" value="local"/>
     <preference name="loadUrlTimeoutValue" value="99999999" />
+    <preference name="DisallowOverscroll" value="true" />    
+    <preference name="KeyboardShrinksView" value="true" />    
     <content src="index.html" />
     <access origin="*" />
 </widget>

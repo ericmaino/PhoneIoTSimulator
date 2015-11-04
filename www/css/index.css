@@ -74,3 +74,22 @@ body {
 #eventhub-config {
     width: 80%;
 }
+
+svg {
+  font: 10px sans-serif;
+}
+.line {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #fff;
+  shape-rendering: crispEdges;
+}
+
+.tick {
+    stroke: #fff;
+}

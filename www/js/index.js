@@ -91,6 +91,13 @@ var app = {
      * @property {Acceleration} the latest acceleration value
      */
     acceleration: undefined,
+    accelerationCount: 25,
+    accelerationHistory: [],
+    accelerationHistoryX: [],
+    accelerationHistoryY: [],
+    accelerationHistoryZ: [],
+    accelerationHistoryT: [],
+    acclerationDuration: 50,
     /**
      * @property {Watch ID} the watch id for acceleration.
      */
@@ -135,7 +142,7 @@ var app = {
      * @property {lastServiceScanEvent} when was the last service scan done
      */
     lastServiceScanEvent: new Date(),
-      
+     
     /**
     * @private
     */
@@ -144,6 +151,8 @@ var app = {
     btnHome: undefined,
     btnReset: undefined,
     configDisplayed: false,
+    
+    random: d3.random.normal(0, .2),
     
     // Application Constructor  
     initialize: function () {
@@ -155,6 +164,20 @@ var app = {
                 return v.toString(16);
             });
         }
+        
+        // for simulation
+        if(! window.device) {
+            app.accelerationHistory = d3.range(app.accelerationCount).map(function(d) { return {x: app.random(), y: app.random(), z: app.random(), timestamp: Date.now() - ((app.accelerationCount - d) * 1000) }});
+            app.accelerationHistoryX = app.accelerationHistory.map(function(d) { return d.x; });
+            app.accelerationHistoryY = app.accelerationHistory.map(function(d) { return d.y; });        
+            app.accelerationHistoryZ = app.accelerationHistory.map(function(d) { return d.z; });        
+            app.accelerationHistoryT = app.accelerationHistory.map(function(d) { return d.timestamp; });                    
+        }
+
+        app.startPositionWatch();
+        app.startAccelerometer();
+        app.startCompass();
+            
         this.bindEvents();
         this.renderMapView();
     },
@@ -180,28 +203,82 @@ var app = {
         app.map.addControl( new L.Control.Compass() );
         
         // Realtime accelerometer graph
-        var accelerometerOverlay = L.d3SvgOverlay(function(sel,proj){
-            
-        var minLogPop = Math.log2(d3.min(cities,function(d){return d.population;}));
-        var citiesUpd = sel.selectAll('circle').data(cities);
-        citiesUpd.enter()
-            .append('circle')
-            .attr('r',function(d){return Math.log2(d.population) - minLogPop + 2;})
-            .attr('cx',function(d){return proj.latLngToLayerPoint(d.latLng).x;})
-            .attr('cy',function(d){return proj.latLngToLayerPoint(d.latLng).y;})
-            .attr('stroke','black')
-            .attr('stroke-width',1)
-            .attr('fill',function(d){return (d.place == 'city') ? "red" : "blue";});
-        });
+        var accelerometerOverlay = L.d3SvgOverlay(function(selection, projection) {
+            var width = 100,
+                height = 50,
+                now = new Date(Date.now() - app.acclerationDuration).valueOf();
+            app.accelerationData = app.accelerationHistory.map(function(x) { return x.x });
+            app.x = d3.time.scale()
+                .domain([now - (app.accelerationCount - 2) * app.acclerationDuration, now - app.acclerationDuration])
+                .range([0, width]);
+            app.y = d3.scale.linear()
+                .domain([-1.0, 1.0])
+                .range([height, 0]);
+            app.line = d3.svg.line()
+                .interpolate("basis")
+                .x(function(d, i) { return app.x(now - (app.accelerationCount - 1 - i) * app.acclerationDuration); })
+                .y(function(d, i) { return app.y(d); });
+            app.svg = selection;
+            selection.append("defs").append("clipPath")
+                .attr("id", "clip")
+              .append("rect")
+                 .attr("width", width)
+                 .attr("height", height);
+            selection.attr("transform", "translate("+window.innerWidth/2 +",5)");                
+            // selection.attr("transform", "translate("+window.innerWidth/2 +","+window.innerHeight/2+")");                            
+            app.x_axis = selection.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height/2 + ")")
+                .call(d3.svg.axis().ticks(0).scale(app.x).orient("bottom"));
+            selection.append("g")
+                .attr("class", "y axis")
+                .call(d3.svg.axis().ticks(0).scale(app.y).orient("left"));
+            app.path = selection.append("g")
+                .attr("clip-path", "url(#clip)")
+              .append("path")
+                .datum(app.accelerationHistoryX)
+                .attr("class", "line");
+            app.tick();
+        }, {});
+        accelerometerOverlay.addTo(app.map);     
+    },
+    tick: function() {
+        // update the domains
+        var now = Date.now();
+
+        // For simulation
+        if(! window.device) {
+            var x = app.random(),
+                y = app.random(),
+                z = app.random();
+            // app.x.domain([now - (app.accelerationHistory.length - 2) * app.acclerationDuration, now - app.acclerationDuration]);
+            app.accelerationHistory.push({x: x, y: y, z: z, timestamp: now });
+            app.accelerationHistoryX.push(x);
+            app.accelerationHistoryY.push(y);        
+            app.accelerationHistoryZ.push(z);        
+            app.accelerationHistoryT.push(now);              
+        }
+                
+        app.path
+            .attr("d", app.line)
+            .attr("transform", null);
         
-        d3.csv("swiss-cities.csv",function(data){
-        cities = data.map(function(d){
-            d.latLng = [+d.lat,+d.lng];
-            d.population = (d.population == '') ? 2000 : +d.population; //NAs
-            return d;
-        });
-        accelerometerOverlay.addTo(map);
-        });        
+        d3.svg.axis.call(app.x_axis);
+
+        app.path.transition()
+            .duration(app.acclerationDuration)
+            .ease("linear")
+            // .attr("transform", "translate(" + app.x(now - (app.accelerationCount - 1) * app.acclerationDuration) + ")")
+            .each("end", app.tick);         
+
+        // pop the old data point off the front
+        if(app.accelerationHistory.length > app.accelerationCount) {
+            app.accelerationHistory.shift();
+            app.accelerationHistoryX.shift();            
+            app.accelerationHistoryY.shift();
+            app.accelerationHistoryZ.shift();
+            app.accelerationHistoryT.shift();            
+        }            
     },
     renderConfigView: function () {
         var map = $('#map-canvas'),
@@ -594,7 +671,13 @@ var app = {
     startAccelerometer: function() {
         app.accelerationWatchId = window.navigator.accelerometer.watchAcceleration(
             function(acceleration) { 
-                app.acceleration = acceleration; 
+                app.acceleration = acceleration;
+                app.accelerationHistory.push(acceleration);
+                app.accelerationHistoryX.push(acceleration.x);
+                app.accelerationHistoryY.push(acceleration.y);
+                app.accelerationHistoryZ.push(acceleration.z);
+                app.accelerationHistoryT.push(acceleration.timestamp);     
+                console.log("Updated new acceleration!");                                           
             }, 
             function() { 
                 console.log("Error capturing acceleration."); 
@@ -704,7 +787,7 @@ var app = {
         if (!app.path) {
             app.path = L.polyline([latlng], 2, {});
         } else {
-            app.path.addLatLng(latlng);
+            // app.path.addLatLng(latlng);
         }
         app.mapLayers.addLayer(app.path);
 
