@@ -93,6 +93,13 @@ var app = {
      * @property {Acceleration} the latest acceleration value
      */
     acceleration: undefined,
+    accelerationCount: 25,
+    accelerationHistory: [],
+    accelerationHistoryX: [],
+    accelerationHistoryY: [],
+    accelerationHistoryZ: [],
+    accelerationHistoryT: [],
+    acclerationDuration: 10,
     /**
      * @property {Watch ID} the watch id for acceleration.
      */
@@ -146,7 +153,9 @@ var app = {
     btnHome: undefined,
     btnReset: undefined,
     configDisplayed: false,
-
+    
+    random: d3.random.normal(0, .2),
+    
     // Application Constructor  
     initialize: function () {
         if (typeof device !== 'undefined') {
@@ -157,6 +166,16 @@ var app = {
                 return v.toString(16);
             });
         }
+        
+        // for simulation
+        if(! window.device) {
+            app.accelerationHistory = d3.range(app.accelerationCount).map(function(d) { return {x: app.random(), y: app.random(), z: app.random(), timestamp: Date.now() - ((app.accelerationCount - d) * 1000) }});
+            app.accelerationHistoryX = app.accelerationHistory.map(function(d) { return d.x; });
+            app.accelerationHistoryY = app.accelerationHistory.map(function(d) { return d.y; });        
+            app.accelerationHistoryZ = app.accelerationHistory.map(function(d) { return d.z; });        
+            app.accelerationHistoryT = app.accelerationHistory.map(function(d) { return d.timestamp; });                    
+        }
+            
         this.bindEvents();
         this.renderMapView();
     },
@@ -177,8 +196,106 @@ var app = {
             accessToken: 'pk.eyJ1IjoiaXJqdWRzb24iLCJhIjoiY2lnMTk4dzFuMHBhbnV3bHZsMmE0Ym1hcCJ9.LQSOcDk_TOrObpLYB-7_xw'
         }).addTo(app.map);
         app.mapLayers = new L.LayerGroup().addTo(app.map);
+        
+        // Compass control to show compass reading
+        app.map.addControl( new L.Control.Compass() );
+        
+        // Realtime accelerometer graph
+        var accelerometerOverlay = L.d3SvgOverlay(function(selection, projection) {
+            var width = 100,
+                height = 50,
+                now = new Date(Date.now() - app.acclerationDuration).valueOf();
+            app.accelerationData = app.accelerationHistory.map(function(x) { return x.x });
+            app.x = d3.time.scale()
+                .domain([now - (app.accelerationCount - 2) * app.acclerationDuration, now - app.acclerationDuration])
+                .range([0, width]);
+            app.y = d3.scale.linear()
+                .domain([-1.0, 1.0])
+                .range([height, 0]);
+            app.line = d3.svg.line()
+                .interpolate("basis")
+                .x(function(d, i) { return app.x(now - (app.accelerationCount - 1 - i) * app.acclerationDuration); })
+                .y(function(d, i) { return app.y(d); });
+            app.svg = selection;
+            selection.append("defs").append("clipPath")
+                .attr("id", "clip")
+              .append("rect")
+                 .attr("width", width)
+                 .attr("height", height);
+            selection.attr("transform", "translate("+window.innerWidth/2 +",5)");                
+            app.x_axis = selection.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height/2 + ")")
+                .call(d3.svg.axis().ticks(0).scale(app.x).orient("bottom"));
+            selection.append("g")
+                .attr("class", "y axis")
+                .call(d3.svg.axis().ticks(0).scale(app.y).orient("left"));
+            app.path_x = selection.append("g")
+                .attr("clip-path", "url(#clip)")
+              .append("path")
+                .datum(app.accelerationHistoryX)
+                .attr("class", "line")
+                .attr("stroke", "red");
+            app.path_y = selection.append("g")
+                .attr("clip-path", "url(#clip)")
+              .append("path")
+                .datum(app.accelerationHistoryY)
+                .attr("class", "line")
+                .attr("stroke", "green");
+            app.path_z = selection.append("g")
+                .attr("clip-path", "url(#clip)")
+              .append("path")
+                .datum(app.accelerationHistoryZ)
+                .attr("class", "line")
+                .attr("stroke", "blue");                
+            app.tick();
+        }, {});
+        accelerometerOverlay.addTo(app.map);     
+    },
+    tick: function() {
+        // update the domains
+        var now = Date.now();
 
-        app.map.addControl(new L.Control.Compass());
+        // For simulation
+        if(! window.device) {
+            var x = app.random(),
+                y = app.random(),
+                z = app.random();
+
+            app.accelerationHistory.push({x: x, y: y, z: z, timestamp: now });
+            app.accelerationHistoryX.push(x);
+            app.accelerationHistoryY.push(y);        
+            app.accelerationHistoryZ.push(z);        
+            app.accelerationHistoryT.push(now);              
+        }
+                
+        app.path_x
+            .attr("d", app.line)
+            .attr("transform", null);
+
+        app.path_y
+            .attr("d", app.line)
+            .attr("transform", null);
+
+        app.path_z
+            .attr("d", app.line)
+            .attr("transform", null);
+                                
+        d3.svg.axis.call(app.x_axis);
+
+        app.path_x.transition()
+            .duration(app.acclerationDuration)
+            .ease("linear")
+            .each("end", app.tick);         
+
+        // pop the old data point off the front
+        if(app.accelerationHistory.length > app.accelerationCount) {
+            app.accelerationHistory.shift();
+            app.accelerationHistoryX.shift();            
+            app.accelerationHistoryY.shift();
+            app.accelerationHistoryZ.shift();
+            app.accelerationHistoryT.shift();            
+        }            
     },
     renderConfigView: function () {
         var map = $('#map-canvas'),
@@ -264,7 +381,7 @@ var app = {
         // Init UI buttons
         this.btnHome = $('button#btn-home');
         this.btnReset = $('button#btn-reset');
-        this.btnPace = $('button#btn-pace');
+        // this.btnPace = $('button#btn-pace');
         this.btnEnabled = $('button#btn-enabled');
         this.btnBeacons = $('button#btn-beacons');
         this.btnConfig = $('button#btn-config');
@@ -279,7 +396,7 @@ var app = {
 
         this.btnHome.on('click', this.onClickHome);
         this.btnReset.on('click', this.onClickReset);
-        this.btnPace.on('click', this.onClickChangePace);
+        // this.btnPace.on('click', this.onClickChangePace);
         this.btnEnabled.on('click', this.onClickToggleEnabled);
         this.btnBeacons.on('click', this.onClickBeacons);
         this.btnConfig.on('click', this.renderConfigView);
@@ -291,8 +408,9 @@ var app = {
     onDeviceReady: function () {
         app.receivedEvent('deviceready');
         app.connectToEventHub();
-        app.configureBackgroundGeoLocation();
         app.startPositionWatch();
+        app.startAccelerometer();
+        app.startCompass();
         // app.startBLEScan();
         // app.runScanTimer();
         app.map.locate({ setView: true, maxZoom: 16 });
@@ -309,66 +427,6 @@ var app = {
                 'timeOut': ENV.settings.eventHub.eventHubTimeout,
             });
         console.log("Event hub client connected.");
-    },
-    configureBackgroundGeoLocation: function () {
-        var fgGeo = window.navigator.geolocation,
-            bgGeo = window.plugins.backgroundGeoLocation;
-
-        app.onClickHome();
-
-        /**
-        * This would be your own callback for Ajax-requests after POSTing background geolocation to your server.
-        */
-        var yourAjaxCallback = function (response) {
-            console.log("My callback.");
-            bgGeo.finish();
-        };
-
-        /**
-        * This callback will be executed every time a geolocation is recorded in the background.
-        */
-        var callbackFn = function (location) {
-            console.log('[js] BackgroundGeoLocation callback:  ' + location.latitude + ',' + location.longitude);
-
-            // Update our current-position marker.
-            app.updateLocation(location);
-
-            // After you Ajax callback is complete, you MUST signal to the native code, which is running a background-thread, that you're done and it can gracefully kill that thread.
-            yourAjaxCallback.call(this);
-        };
-
-        var failureFn = function (error) {
-            console.log('BackgroundGeoLocation error');
-        };
-
-        // Only ios emits this stationary event
-        bgGeo.onStationary(function (location) {
-            if (!app.stationaryRadius) {
-                console.log('iOS emitted a stationary event, we discarded it.');
-            }
-        });
-
-        // BackgroundGeoLocation is highly configurable.
-        bgGeo.configure(callbackFn, failureFn, {
-            url: 'http://only.for.android.com/update_location.json', // <-- Android ONLY:  your server url to send locations to
-            params: {
-                auth_token: 'user_secret_auth_token',    //  <-- Android ONLY:  HTTP POST params sent to your server when persisting locations.
-                foo: 'bar'                              //  <-- Android ONLY:  HTTP POST params sent to your server when persisting locations.
-            },
-            desiredAccuracy: 0,
-            stationaryRadius: 50,
-            distanceFilter: 50,
-            notificationTitle: 'IoT Location Simulator', // <-- android only, customize the title of the notification
-            notificationText: 'ENABLED', // <-- android only, customize the text of the notification
-            activityType: 'IoTLocationTracking',
-            debug: false, // <-- enable this hear sounds for background-geolocation life-cycle.
-            stopOnTerminate: true // <-- enable this to clear background location settings when the app terminates
-        });
-
-        // Turn ON the background-geolocation system.  The user will be tracked whenever they suspend the app.
-        if (ENV.settings.sensors.geolocation == true) {
-            bgGeo.start();
-        }
     },
 
     // Run a timer to restart scan in case the device does
@@ -499,13 +557,6 @@ var app = {
             });
         }
     },
-    onClickChangePace: function (value) {
-        var bgGeo = window.plugins.backgroundGeoLocation,
-            btnPace = app.btnPace;
-
-        btnPace.removeClass('btn-success');
-        btnPace.removeClass('btn-danger');
-    },
     onClickReset: function () {
         // Clear prev location markers.
         app.path = L.polyline([], 2, {});
@@ -517,8 +568,7 @@ var app = {
     },
 
     onClickToggleEnabled: function (value) {
-        var bgGeo = window.plugins.backgroundGeoLocation,
-            btnEnabled = app.btnEnabled,
+        var btnEnabled = app.btnEnabled,
             isEnabled = ENV.toggle('enabled');
 
         btnEnabled.removeClass('btn-danger');
@@ -527,14 +577,12 @@ var app = {
         if (isEnabled == 'true') {
             btnEnabled.addClass('btn-danger');
             btnEnabled[0].innerHTML = 'Stop';
-            bgGeo.start();
             app.startPositionWatch();
             app.startAccelerometer();
             app.startCompass();
         } else {
             btnEnabled.addClass('btn-success');
             btnEnabled[0].innerHTML = 'Start';
-            bgGeo.stop();
             app.stopPositionWatch();
             app.stopAccelerometer();
             app.stopCompass();
@@ -542,12 +590,11 @@ var app = {
     },
 
     startPositionWatch: function () {
-        var fgGeo = window.navigator.geolocation;
         if (app.locationWatchId) {
             app.stopPositionWatch();
         }
         // Watch foreground location
-        app.locationWatchId = fgGeo.watchPosition(function (location) {
+        app.locationWatchId = window.navigator.geolocation.watchPosition(function (location) {
             app.updateLocation(location.coords);
         }, function () { }, {
             enableHighAccuracy: true,
@@ -558,24 +605,28 @@ var app = {
     },
 
     stopPositionWatch: function () {
-        var fgGeo = window.navigator.geolocation;
         if (app.locationWatchId) {
-            fgGeo.clearWatch(app.locationWatchId);
+            window.navigator.geolocation.clearWatch(app.locationWatchId);
             app.locationWatchId = undefined;
         }
     },
 
     startAccelerometer: function () {
         app.accelerationWatchId = window.navigator.accelerometer.watchAcceleration(
-            function (acceleration) {
+            function(acceleration) { 
                 app.acceleration = acceleration;
-                app.sendToCloud();
-            },
-            function () {
-                console.log("Error capturing acceleration.");
-            }, {
-                frequency: 250
-            });
+                app.accelerationHistory.push(acceleration);
+                app.accelerationHistoryX.push(acceleration.x);
+                app.accelerationHistoryY.push(acceleration.y);
+                app.accelerationHistoryZ.push(acceleration.z);
+                app.accelerationHistoryT.push(acceleration.timestamp);     
+                console.log("Updated new acceleration!");    
+                // TODO move this to it's own timer/task
+                app.sendToCloud();                                                       
+            }, 
+            function() { 
+                console.log("Error capturing acceleration."); 
+            }, {frequency: 250});  
     },
     stopAccelerometer: function () {
         window.navigator.accelerometer.clearWatch(app.accelerationWatchId);
@@ -685,8 +736,8 @@ var app = {
         }
 
         // Add a track of our history
-        if (!app.path) {
-            app.path = L.polyline([latlng], 2, {});
+        if (! app.path) {
+            app.path = L.Polyline([latlng], 2, {});
         } else {
             app.path.addLatLng(latlng);
         }

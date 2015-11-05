@@ -4,9 +4,12 @@
   "description": "Cordova IoT Simulator Application",
   "main": "index.js",
   "dependencies": {
+    "shelljs": "^0.5.3"
   },
   "devDependencies": {
-    "cordova-icon": "^0.3.0"
+    "cordova-icon": "^0.3.0",
+    "ios-sim": "^5.0.3",
+    "shelljs": "^0.5.3"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
