@@ -9,5 +9,3 @@ this is a cordova application to use it:
 3) cordova platform add ios (or android)
 4) cordova build ios (or android)
 5) cordova run ios (or android)
-
-
