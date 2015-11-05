@@ -440,8 +440,8 @@ static int EVOPerhiperalAssociatedObjectKey = 42;
 	return @{
 		@"handle" : handle,
 		@"uuid" : [characteristic.UUID uuidString],
-		@"permissions" : [NSNumber numberWithInt: permissions],
-		@"properties" : [NSNumber numberWithInt: properties],
+		@"permission" : [NSNumber numberWithInt: permissions],
+		@"property" : [NSNumber numberWithInt: properties],
 		@"writeType" : [NSNumber numberWithInt: writeType]
 	};
 }
@@ -455,7 +455,7 @@ static int EVOPerhiperalAssociatedObjectKey = 42;
 	return @{
 		@"handle" : handle,
 		@"uuid" : [descriptor.UUID uuidString],
-		@"permissions" : [NSNumber numberWithInt: permissions]
+		@"permission" : [NSNumber numberWithInt: permissions]
 	};
 }
 
@@ -1230,55 +1230,6 @@ static int EVOPerhiperalAssociatedObjectKey = 42;
 	[self freePeripherals];
 }
 
-// Returns true if the object can be safely fed into sendDictionary, false otherwise.
-- (bool) isSafeToCopy: (NSObject*) o
-{
-	Class c = o.class;
-	return ([c isSubclassOfClass:NSString.class] ||
-		[c isSubclassOfClass:NSNull.class] ||
-		[c isSubclassOfClass:NSNumber.class] ||
-		[c isSubclassOfClass:NSValue.class] ||
-		false);
-}
-
-// Returns either the object, or a copy of the object.
-// In either case, the result can be safely fed into sendDictionary.
-// May @throw the object if no conversion is implemented.
-- (NSObject*) prepareForJson: (NSObject*) o
-{
-	if([self isSafeToCopy:o])
-		return o;
-	if([o.class isSubclassOfClass:CBUUID.class]) {
-		if (floor(NSFoundationVersionNumber) < NSFoundationVersionNumber_iOS_7_1){
-	           return [(CBUUID*)o uuidString];
-	        } else {
-	           return [(CBUUID*)o UUIDString];
-	        }
-	}
-	if([o.class isSubclassOfClass:NSData.class]) {
-		return [(NSData*)o base64EncodedStringWithOptions:0];
-	}
-	if([o.class isSubclassOfClass:NSArray.class]) {
-		NSArray* a = (NSArray*)o;
-		NSMutableArray* ma = [NSMutableArray arrayWithCapacity:a.count];
-		for(int i=0; i<a.count; i++) {
-			[ma addObject:[self prepareForJson:[a objectAtIndex:i]]];
-		}
-		return ma;
-	}
-	if([o.class isSubclassOfClass:NSDictionary.class]) {
-		NSDictionary* src = (NSDictionary*)o;
-		NSMutableDictionary* newData = [NSMutableDictionary dictionaryWithCapacity:src.count];
-		[src enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL *stop) {
-			id newKey = [self prepareForJson:key];
-			id newValue = [self prepareForJson:value];
-			[newData setObject:newValue forKey:newKey];
-		}];
-		return newData;
-	}
-	@throw o;
-}
-
 /**
  * From interface CBCentralManagerDelegate.
  * Called when a device is discovered.
@@ -1287,17 +1238,10 @@ static int EVOPerhiperalAssociatedObjectKey = 42;
 	didDiscoverPeripheral: (CBPeripheral *)peripheral
 	advertisementData: (NSDictionary *)advertisementData
 	RSSI: (NSNumber *)RSSI
-{
-	// Some objects in advertisementData don't support CDVJSONSerializing.
-	// To fix that, we make a deep copy of advertisementData and
-	// prepareForJson those objects.
-	// Since we call prepareForJson: with an NSDictionary we will get
-	// back an NSDictionary, so this type cast should be safe.
-	NSDictionary* newData = (NSDictionary*) [self prepareForJson:advertisementData];
 
+{
 	[self
 		sendScanInfoForPeriperhal: peripheral
-		advertisementData: newData
 		RSSI: RSSI];
 }
 
@@ -1487,7 +1431,6 @@ static int EVOPerhiperalAssociatedObjectKey = 42;
  * Internal helper method.
  */
 - (void) sendScanInfoForPeriperhal: (CBPeripheral *)peripheral
-	advertisementData: (NSDictionary *)advertisementData
 	RSSI: (NSNumber *)RSSI
 {
 	// Create an info object.
@@ -1496,7 +1439,6 @@ static int EVOPerhiperalAssociatedObjectKey = 42;
 	NSDictionary* info = @{
 		@"address" : [peripheral.identifier UUIDString],
 		@"rssi" : RSSI,
-		@"advertisementData" : advertisementData,
 		@"name" : (peripheral.name != nil) ? peripheral.name : [NSNull null],
 		@"scanRecord" : @""
 	};
