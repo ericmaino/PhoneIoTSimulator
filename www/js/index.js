@@ -27,9 +27,9 @@ var ENV = (function () {
              * state-mgmt
              */
             eventHub: {
-                eventHubName: localStorage.getItem('eventHubName') || 'driverdemo', //'EventHub Name',
-                eventHubNamespace: localStorage.getItem('eventHubNamespace') || 'ericmaitesting', //'EventHub Namespace',
-                eventHubSASKey: localStorage.getItem('eventHubSASKey') || '50MnajPCEzPC+rvjq7rlOLRqUAQF5KewtOAlkgMUifo=', //'EventHub SAS Key',
+                eventHubName: localStorage.getItem('eventHubName') || 'your_eventhub_name', //'EventHub Name',
+                eventHubNamespace: localStorage.getItem('eventHubNamespace') || 'your_namespace', //'EventHub Namespace',
+                eventHubSASKey: localStorage.getItem('eventHubSASKey') || 'your_eventhub_sas_key', //'EventHub SAS Key',
                 eventHubSASKeyName: localStorage.getItem('eventHubSASKeyName') || 'SendOnly', //'EventHub SAS Key Name',
                 eventHubTimeout: localStorage.getItem('eventHubTimeout') || 10,
             },
